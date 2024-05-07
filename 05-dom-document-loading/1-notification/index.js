@@ -9,6 +9,7 @@ export default class NotificationMessage {
     this.duration = duration;
     this.type = type;
     this.title = title;
+    this.timerId = null;
 
     this.element = this.createTemplate();
   }
@@ -31,7 +32,7 @@ export default class NotificationMessage {
   show(container = document.body) {
     container.append(this.createTemplate());
 
-    setTimeout(() => this.remove(), this.duration);
+    this.timerId = setTimeout(() => this.remove(), this.duration);
   }
 
   remove() {
@@ -40,5 +41,6 @@ export default class NotificationMessage {
 
   destroy() {
     this.remove();
+    clearTimeout(this.timerId);
   }
 }
