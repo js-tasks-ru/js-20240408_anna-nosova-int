@@ -25,10 +25,10 @@ export default class SortableTable {
     return (`<div data-element="productsContainer" class="products-list__container">
         <div class="sortable-table">
             <div data-element="header" class="sortable-table__header sortable-table__row">
-            ${this.createHeader(this.headerConfig)}
+                ${this.createHeader(this.headerConfig)}
             </div>
             <div data-element="body" class="sortable-table__body">
-            ${this.createRows(this.data)}
+                ${this.createRows(this.data)}
             </div>
         </div>
     </div>`);
@@ -37,20 +37,23 @@ export default class SortableTable {
   createHeader(headerConfig) {
     return headerConfig.map(({ id, sortable, title }) =>
       `<div class="sortable-table__cell" data-id="${id}" data-sortable="${sortable}">
-        <span>${title}</span>
-       </div>`).join('');
+            <span>${title}</span>
+       </div>`)
+      .join('');
   }
 
   createArrows() {
     return (`<span data-element="arrow" class="sortable-table__sort-arrow">
-            <span class="sort-arrow"></span>
+                <span class="sort-arrow"></span>
             </span>`);
   }
 
   createRows(data) {
-    return data.map((item) => `<a href="/products/${item.id}" class="sortable-table__row">
+    return data.map((item) =>
+      `<a href="/products/${item.id}" class="sortable-table__row">
         ${this.createCells(item, data)}
-    </a>`).join('');
+       </a>`)
+      .join('');
   }
 
   createCells(item) {
@@ -68,7 +71,6 @@ export default class SortableTable {
     }).join('');
   }
 
-
   updateArrows(field, order) {
     if (this.element.querySelector(`[data-element="arrow"]`)) {
       this.element.querySelector(`[data-element="arrow"]`).remove();
@@ -76,23 +78,6 @@ export default class SortableTable {
     this.element.querySelector(`[data-id="${field}"]`).append(this.createElement(this.createArrows()));
     this.element.querySelector(`[data-id="${field}"]`).dataset.order = order;
   }
-
-  // sortData(field, order) {
-  //   const sortingArr = [...this.data];
-  //
-  //   if (order === 'desc') {
-  //     typeof sortingArr[0][field] === 'string' ?
-  //       sortingArr.sort((a, b) => a[field].localeCompare(b[field])).reverse()
-  //       : sortingArr.sort((a, b) => a[field] - b[field]).reverse();
-  //   }
-  //   if (order === 'asc') {
-  //     typeof sortingArr[0][field] === 'string' ?
-  //       sortingArr.sort((a, b) => a[field].localeCompare(b[field]))
-  //       : sortingArr.sort((a, b) => a[field] - b[field]);
-  //   }
-  //
-  //   return sortingArr;
-  // }
 
   sortData(field, order) {
     const sortingArr = [...this.data];
@@ -115,7 +100,6 @@ export default class SortableTable {
     this.element.querySelector(`[data-element="body"]`).innerHTML = this.createRows(sortedData);
     this.updateArrows(field, order);
   }
-
 
   remove() {
     this.element.remove();
