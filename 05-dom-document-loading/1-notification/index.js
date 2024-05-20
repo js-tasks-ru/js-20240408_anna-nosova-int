@@ -1,5 +1,6 @@
 export default class NotificationMessage {
   element;
+  static lastShownComponent;
 
   constructor(
     title = '',
@@ -11,10 +12,10 @@ export default class NotificationMessage {
     this.title = title;
     this.timerId = null;
 
-    this.element = this.createTemplate();
+    this.element = this.createElement();
   }
 
-  createTemplate() {
+  createElement() {
     const element = document.createElement('div');
 
     element.innerHTML = `<div class="notification ${this.type}" style="--value:${this.duration}ms">
@@ -30,9 +31,13 @@ export default class NotificationMessage {
   }
 
   show(container = document.body) {
-    container.append(this.createTemplate());
+    if (NotificationMessage.lastShownComponent) {
+      NotificationMessage.lastShownComponent.destroy();
+    }
+    NotificationMessage.lastShownComponent = this;
+    container.append(this.createElement());
 
-    this.timerId = setTimeout(() => this.remove(), this.duration);
+    this.timerId = setTimeout(() => this.destroy(), this.duration);
   }
 
   remove() {
