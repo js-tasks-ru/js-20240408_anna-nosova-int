@@ -1,9 +1,18 @@
 export default class SortableTable {
+  subElements = {};
 
   constructor(headerConfig = [], data = []) {
     this.data = data;
     this.headerConfig = headerConfig;
     this.element = this.createElement(this.createTemplate());
+
+    this.selectSubElements();
+  }
+
+  selectSubElements() {
+    this.element.querySelectorAll("[data-element]").forEach((element) => {
+      this.subElements[element.dataset.element] = element;
+    });
   }
 
   createElement(template) {
@@ -68,18 +77,34 @@ export default class SortableTable {
     this.element.querySelector(`[data-id="${field}"]`).dataset.order = order;
   }
 
-  sortData(field, order) {
-    let sortingArr = [...this.data];
+  // sortData(field, order) {
+  //   const sortingArr = [...this.data];
+  //
+  //   if (order === 'desc') {
+  //     typeof sortingArr[0][field] === 'string' ?
+  //       sortingArr.sort((a, b) => a[field].localeCompare(b[field])).reverse()
+  //       : sortingArr.sort((a, b) => a[field] - b[field]).reverse();
+  //   }
+  //   if (order === 'asc') {
+  //     typeof sortingArr[0][field] === 'string' ?
+  //       sortingArr.sort((a, b) => a[field].localeCompare(b[field]))
+  //       : sortingArr.sort((a, b) => a[field] - b[field]);
+  //   }
+  //
+  //   return sortingArr;
+  // }
 
-    if (order === 'desc') {
-      typeof sortingArr[0][field] === 'string' ?
-        sortingArr.sort((a, b) => a[field].localeCompare(b[field])).reverse()
-        : sortingArr.sort((a, b) => a[field] - b[field]).reverse();
+  sortData(field, order) {
+    const sortingArr = [...this.data];
+    const fieldConfig = this.headerConfig.find(config => config.id === field);
+    const k = order === "desc" ? -1 : 1;
+
+    if (fieldConfig.sortType === "string") {
+      sortingArr.sort((a, b) => k * a[field].localeCompare(b[field], ['ru', 'en'], { caseFirst: 'upper' }));
     }
-    if (order === 'asc') {
-      typeof sortingArr[0][field] === 'string' ?
-        sortingArr.sort((a, b) => a[field].localeCompare(b[field]))
-        : sortingArr.sort((a, b) => a[field] - b[field]);
+
+    if (fieldConfig.sortType === "number") {
+      sortingArr.sort((a, b) => k * (a[field] - b[field]));
     }
 
     return sortingArr;

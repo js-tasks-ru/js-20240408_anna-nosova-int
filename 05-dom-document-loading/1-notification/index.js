@@ -35,7 +35,7 @@ export default class NotificationMessage {
       NotificationMessage.lastShownComponent.destroy();
     }
     NotificationMessage.lastShownComponent = this;
-    container.append(this.createElement());
+    container.append(this.element);
 
     this.timerId = setTimeout(() => this.destroy(), this.duration);
   }
