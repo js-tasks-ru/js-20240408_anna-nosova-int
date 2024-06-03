@@ -1,25 +1,54 @@
 import SortableTableV1 from '../../05-dom-document-loading/2-sortable-table-v1/index.js';
 
-export default class SortableTable extends SortableTableV1 {
+export default class SortableTableV2 extends SortableTableV1 {
   constructor(headersConfig, {
     data = [],
     sorted = {},
   } = {}) {
     super(headersConfig, data);
     this.sorted = sorted;
-    this.element = this.createElement(this.createTemplate());
 
     this.sort(this.sorted.id, this.sorted.order);
-    this.onHeaderColClick();
+    this.addEventListeners();
   }
 
-  onHeaderColClick() {
-    const header = this.element.querySelector(`[data-element ="header"]`);
-    header.onpointerdown = (event) => {
-      const col = event.target.closest(`[data-sortable ="true"]`);
-      const sortOrder = col.dataset.order === 'asc' ? 'desc' : 'asc';
+  addEventListeners() {
+    this.subElements.header.addEventListener('pointerdown', this.onHeaderColClick);
+  }
 
-      this.sort(col.dataset.id, sortOrder);
-    };
+  onHeaderColClick = (event) => {
+    const col = event.target.closest('[data-sortable="true"]');
+    if (!col) {
+      return;
+    }
+    const sortOrder = col.dataset.order === 'desc' ? 'asc' : 'desc';
+
+    this.sort(col.dataset.id, sortOrder);
   }
 }
+
+
+// import SortableTableV1 from '../../05-dom-document-loading/2-sortable-table-v1/index.js';
+//
+// export default class SortableTable extends SortableTableV1 {
+//   constructor(headersConfig, {
+//     data = [],
+//     sorted = {},
+//   } = {}) {
+//     super(headersConfig, data);
+//     this.sorted = sorted;
+//
+//     this.sort(this.sorted.id, this.sorted.order);
+//     this.onHeaderColClick();
+//   }
+//
+//   onHeaderColClick() {
+//     const header = this.element.querySelector(`[data-element ="header"]`);
+//     header.onpointerdown = (event) => {
+//       const col = event.target.closest(`[data-sortable ="true"]`);
+//       const sortOrder = col.dataset.order === 'desc' ? 'asc' : 'desc';
+//
+//       this.sort(col.dataset.id, sortOrder);
+//     };
+//   }
+// }
