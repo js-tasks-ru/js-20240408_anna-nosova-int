@@ -1,4 +1,6 @@
 export default class DoubleSlider {
+  element;
+  subElements = {};
 
   constructor(
     {
@@ -13,17 +15,21 @@ export default class DoubleSlider {
     this.formatValue = formatValue;
 
     this.render();
+    this.createSubElements();
     this.addEventListeners();
   }
 
   get template() {
+    let left = this.getPercentage(this.selected.from);
+    let right = 100 - this.getPercentage(this.selected.to);
+
     return `
       <div class="range-slider">
         <span data-element="from">${ this.formatValue(this.selected.from) }</span>
-        <div class="range-slider__inner">
-           <span class="range-slider__progress" style="left: ${ this.getPercentage(this.selected.from) }%; right: ${ 100 - this.getPercentage(this.selected.to) }%"></span>
-           <span class="range-slider__thumb-left" style="left: ${ this.getPercentage(this.selected.from) }%"></span>
-           <span class="range-slider__thumb-right" style="right: ${ 100 - this.getPercentage(this.selected.to) }%"></span>
+        <div data-element="inner" class="range-slider__inner">
+           <span data-element="progress" class="range-slider__progress" style="left: ${ left }%; right: ${ right }%"></span>
+           <span data-element="thumbLeft" class="range-slider__thumb-left" style="left: ${ left }%"></span>
+           <span data-element="thumbRight" class="range-slider__thumb-right" style="right: ${ right }%"></span>
         </div>
         <span data-element="to">${ this.formatValue(this.selected.to) }</span>
       </div>`;
@@ -35,35 +41,44 @@ export default class DoubleSlider {
     this.element = element.firstElementChild;
   }
 
+  createSubElements() {
+    const elements = this.element.querySelectorAll('[data-element]');
+    for (const element of elements) {
+      this.subElements[element.dataset.element] = element;
+    }
+  }
+
   getPercentage(value) {
     return ((value - this.min) / (this.max - this.min)) * 100;
   }
 
   addEventListeners() {
-    this.element.querySelector('.range-slider__thumb-left').addEventListener('pointerdown', this.onThumbPointerDown);
-    this.element.querySelector('.range-slider__thumb-right').addEventListener('pointerdown', this.onThumbPointerDown);
+    this.subElements.inner.addEventListener('pointerdown', this.onThumbPointerDown);
   }
 
   onThumbPointerDown = event => {
-    event.preventDefault();
-
     const thumb = event.target;
-    const { left, right } = this.element.querySelector('.range-slider__inner').getBoundingClientRect();
-    const shiftX = event.clientX - thumb.getBoundingClientRect().left;
-    const moveThumb = this.onThumbPointerMove.bind(this, thumb, left, right, shiftX);
+    if (thumb === this.subElements.thumbLeft || thumb === this.subElements.thumbRight) {
+      event.preventDefault();
+      this.currentThumb = thumb;
 
-    document.addEventListener('pointermove', moveThumb);
-    document.addEventListener('pointerup', () => {
-      document.removeEventListener('pointermove', moveThumb);
-      this.element.dispatchEvent(new CustomEvent('range-select', {
-        detail: this.selected,
-        bubbles: true
-      }));
-    }, { once: true });
+      document.addEventListener('pointermove', this.onThumbPointerMove);
+      document.addEventListener('pointerup', this.onThumbPointerUp);
+    }
   }
 
-  onThumbPointerMove = (thumb, left, right, shiftX, event) => {
-    let newLeft = (event.clientX - shiftX - left) / (right - left) * 100;
+  onThumbPointerUp = () => {
+    document.removeEventListener('pointermove', this.onThumbPointerMove);
+    document.removeEventListener('pointerup', this.onThumbPointerUp);
+    this.element.dispatchEvent(new CustomEvent('range-select', {
+      detail: this.selected,
+      bubbles: true
+    }));
+  }
+
+  onThumbPointerMove = event => {
+    const { left, right } = this.subElements.inner.getBoundingClientRect();
+    let newLeft = (event.clientX - left) / (right - left) * 100;
 
     if (newLeft < 0) {
       newLeft = 0;
@@ -72,41 +87,38 @@ export default class DoubleSlider {
       newLeft = 100;
     }
 
-    if (thumb.classList.contains('range-slider__thumb-left')) {
-      const rightThumb = this.element.querySelector('.range-slider__thumb-right');
-      const rightThumbLeft = parseFloat(rightThumb.style.right);
+    if (this.currentThumb === this.subElements.thumbLeft) {
 
-      if (newLeft > 100 - rightThumbLeft) {
-        newLeft = 100 - rightThumbLeft;
+      if (newLeft > 100 - this.getPercentage((this.selected.to))) {
+        return;
       }
 
       this.selected.from = Math.round(this.min + newLeft * (this.max - this.min) / 100);
-      thumb.style.left = `${ newLeft }%`;
-      this.element.querySelector('[data-element="from"]').textContent = this.formatValue(this.selected.from);
-    } else {
-      const leftThumb = this.element.querySelector('.range-slider__thumb-left');
-      const leftThumbLeft = parseFloat(leftThumb.style.left);
+      this.currentThumb.style.left = this.subElements.progress.style.left = `${ newLeft }%`;
+      this.subElements.from.textContent = this.formatValue(this.selected.from);
+    }
 
-      if (newLeft < leftThumbLeft) {
-        newLeft = leftThumbLeft;
+    if (this.currentThumb === this.subElements.thumbRight) {
+
+      if (newLeft < this.getPercentage((this.selected.from))) {
+        return;
       }
 
       this.selected.to = Math.round(this.min + newLeft * (this.max - this.min) / 100);
-      thumb.style.right = `${ 100 - newLeft }%`;
-      console.log(this.selected.to);
-      this.element.querySelector('[data-element="to"]').textContent = this.formatValue(this.selected.to);
+      this.currentThumb.style.right = this.subElements.progress.style.right = `${ 100 - newLeft }%`;
+      this.subElements.to.textContent = this.formatValue(this.selected.to);
     }
-
-    this.updateProgress();
   }
 
-  updateProgress() {
-    const progress = this.element.querySelector('.range-slider__progress');
-    progress.style.left = `${this.getPercentage(this.selected.from)}%`;
-    progress.style.right = `${100 - this.getPercentage(this.selected.to)}%`;
+  remove() {
+    this.element.remove();
   }
 
   destroy() {
-    this.element.remove();
+    this.remove();
+    this.subElements.inner.removeEventListener('pointerdown', this.onThumbPointerDown);
+    document.removeEventListener('pointermove', this.onThumbPointerMove);
+    document.removeEventListener('pointerup', this.onThumbPointerUp);
   }
+
 }
