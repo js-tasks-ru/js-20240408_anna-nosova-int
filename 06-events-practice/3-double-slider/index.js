@@ -88,9 +88,10 @@ export default class DoubleSlider {
     }
 
     if (this.currentThumb === this.subElements.thumbLeft) {
+      const rightThumb = parseFloat(this.subElements.thumbRight.style.right);
 
-      if (newLeft > 100 - this.getPercentage((this.selected.to))) {
-        return;
+      if (newLeft > 100 - rightThumb) {
+        newLeft = 100 - rightThumb;
       }
 
       this.selected.from = Math.round(this.min + newLeft * (this.max - this.min) / 100);
@@ -99,11 +100,11 @@ export default class DoubleSlider {
     }
 
     if (this.currentThumb === this.subElements.thumbRight) {
+      const leftThumb = parseFloat(this.subElements.thumbLeft.style.left);
 
-      if (newLeft < this.getPercentage((this.selected.from))) {
-        return;
+      if (newLeft < leftThumb) {
+        newLeft = leftThumb;
       }
-
       this.selected.to = Math.round(this.min + newLeft * (this.max - this.min) / 100);
       this.currentThumb.style.right = this.subElements.progress.style.right = `${ 100 - newLeft }%`;
       this.subElements.to.textContent = this.formatValue(this.selected.to);
@@ -116,7 +117,7 @@ export default class DoubleSlider {
 
   destroy() {
     this.remove();
-    this.subElements.inner.removeEventListener('pointerdown', this.onThumbPointerDown);
+    this.subElements.inner.addEventListener('pointerdown', this.onThumbPointerDown);
     document.removeEventListener('pointermove', this.onThumbPointerMove);
     document.removeEventListener('pointerup', this.onThumbPointerUp);
   }
