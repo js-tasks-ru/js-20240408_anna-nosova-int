@@ -117,7 +117,7 @@ export default class DoubleSlider {
 
   destroy() {
     this.remove();
-    this.subElements.inner.addEventListener('pointerdown', this.onThumbPointerDown);
+    this.subElements.inner.removeEventListener('pointerdown', this.onThumbPointerDown);
     document.removeEventListener('pointermove', this.onThumbPointerMove);
     document.removeEventListener('pointerup', this.onThumbPointerUp);
   }
